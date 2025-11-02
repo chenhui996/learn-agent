@@ -7,7 +7,7 @@ client = OpenAI(
     base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
 )
 messages = [{"role": "user", "content": "你是谁"}]
-completion = client.chat.completions.create(
+completion = client.chat.completions.create( # type: ignore
     model="qwq-plus",
     messages=messages,
     stream=True

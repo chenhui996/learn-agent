@@ -1,8 +1,8 @@
 # 通过 bai lian 大模型调用 tools
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.prompts import ChatMessagePromptTemplate
-from langchain_core.prompts import FewShotPromptTemplate
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate # 聊天提示词模版（组合定义好的角色）
+from langchain_core.prompts import ChatMessagePromptTemplate # 定义某一角色
+from langchain_core.prompts import FewShotPromptTemplate # 少样本提示模版
+from langchain_core.prompts import PromptTemplate # 文本补全模型：生成单轮文本任务的提示
 from langchain_openai import ChatOpenAI
 from pydantic import StrictStr
 
@@ -17,22 +17,25 @@ llm = ChatOpenAI(
 
 ############################################################################################################
 
+# 角色 1
 system_message_template = ChatMessagePromptTemplate.from_template(
     template='你是一名{role}专家，擅长回答{domain}领域的问题',
     role="system"
 )
 
+# 角色 2
 user_message_template = ChatMessagePromptTemplate.from_template(
     template='用户问题：{question}',
     role="user"
 )
 
-# 创建提示词模版
+# 创建提示词模版（组合 角色1 和 角色2）
 chart_prompt_template = ChatPromptTemplate.from_messages([
     system_message_template,
     user_message_template
 ])
 
+# 为上面的角色对话，注入参数
 prompt = chart_prompt_template.format_messages(
     role="编程",
     domain="Web开发",
@@ -74,4 +77,5 @@ chain = few_shot_prompt_template | llm
 resp = chain.stream(input={'text': 'Thank you'})
 
 for chunk in resp:
+    # print(chunk)
     print(chunk.content, end="")
