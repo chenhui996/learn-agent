@@ -45,36 +45,12 @@ class CalcInputArgs(BaseModel):
 @tool(
     description="add two numbers",
     args_schema=CalcInputArgs,
-    return_direct=True,
+    return_direct=False,
 )
 def add(a, b):
     return a + b
 
-@tool(
-    description="subtract two numbers",
-    args_schema=CalcInputArgs,
-    return_direct=True,
-)
-def subtract(a, b):
-    return a - b
-
-@tool(
-    description="multiply two numbers",
-    args_schema=CalcInputArgs,
-    return_direct=True,
-)
-def multiply(a, b):
-    return a * b
-
-@tool(
-    description="divide two numbers",
-    args_schema=CalcInputArgs,
-    return_direct=True,
-)
-def divide(a, b):
-    return a / b
-
 def create_calc_tools():
-    return [add, subtract, multiply, divide]
+    return [add]
 
 calc_tools = create_calc_tools() # list[BaseTool]
