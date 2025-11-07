@@ -8,6 +8,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
+from langchain_community.agent_toolkits import FileManagementToolkit # 工具包
+
 ############################################################################################################
 
 llm = ChatOpenAI(
@@ -55,3 +57,6 @@ def create_calc_tools():
     return [add]
 
 calc_tools = create_calc_tools() # list[BaseTool]
+
+file_toolkit = FileManagementToolkit(root_dir="/Users/chenhui/Downloads/aiAgent/ai-agent-test/.temp")
+file_tools = file_toolkit.get_tools()
