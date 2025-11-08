@@ -46,7 +46,7 @@ async def create_and_run_agent():
 - 考虑出行时间和路线，以及天气状况和穿衣建议
 
 要求：
-- 制作网页来展示出行线路和位置，输出一个 HTML 页面到：/Users/chenhui/Downloads/aiAgent/ai-agent-test/.temp，名称为：guide.html
+- 制作网页来展示出行线路和位置，输出一个 HTML 页面到：/Users/chenhui/Downloads/agent/ai-agent-test/.temp，名称为：guide.html
 - 网页使用简约美观的页面风格，以及卡片展示
 - 行程规划的结果，要能够在 高德APP 中展示，并集成到 H5 页面中
 """)

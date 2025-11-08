@@ -58,5 +58,5 @@ def create_calc_tools():
 
 calc_tools = create_calc_tools() # list[BaseTool]
 
-file_toolkit = FileManagementToolkit(root_dir="/Users/chenhui/Downloads/aiAgent/ai-agent-test/.temp")
+file_toolkit = FileManagementToolkit(root_dir="/Users/chenhui/Downloads/agent/ai-agent-test/.temp")
 file_tools = file_toolkit.get_tools()
