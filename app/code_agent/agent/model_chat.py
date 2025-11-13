@@ -1,19 +1,25 @@
-# import uuid
+import uuid
 
 # from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.chat_message_histories import FileChatMessageHistory
 from langchain_core.runnables import RunnableWithMessageHistory, RunnableConfig
+from langchain_community.agent_toolkits.file_management import FileManagementToolkit
 
-from app.agent.model.qwen import llm_qwen
-from app.agent.prompts.multi_chat_prompts import multi_chat_prompt
+from app.code_agent.model.qwen import llm_qwen
+from app.code_agent.prompts.multi_chat_prompts import multi_chat_prompt
 
-# 构建 LCEL
-chain = multi_chat_prompt | llm_qwen | StrOutputParser()
 
 def get_session_history(session_id: str):
     return FileChatMessageHistory(f"{session_id}.json")
 
+file_toolkit = FileManagementToolkit(root_dir='/Users/chenhui/Downloads/agent/llm/.temp')
+file_tools = file_toolkit.get_tools()
+
+llm_with_tools = llm_qwen.bind_tools(tools=file_tools)
+
+# 构建 LCEL
+chain = multi_chat_prompt | llm_with_tools | StrOutputParser()
 
 # runnable: langchain 当中一切可以运行的对象
 chain_with_history = RunnableWithMessageHistory(
@@ -27,8 +33,8 @@ chain_with_history = RunnableWithMessageHistory(
 # 构建多轮对话能力
 def run_conversation():
     # 为用户创建一个 id
-    # session_id = uuid.uuid4()
-    session_id = 'e5a36d27-5826-4c17-9f8e-f90ac245f27c'
+    session_id = uuid.uuid4()
+    # session_id = 'e5a36d27-5826-4c17-9f8e-f90ac245f27c'
     # print(session_id)
 
     # 创建一个无限的死循环，维持一个对话

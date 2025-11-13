@@ -4,7 +4,7 @@ import os
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langchain_mcp_adapters.tools import load_mcp_tools
 from mcp import StdioServerParameters, ClientSession, stdio_client
-from langgraph.prebuilt import create_react_agent  # 官方现在更推荐的创建 agent 的方案
+from langgraph.prebuilt import create_react_agent  # 官方现在更推荐的创建 code_agent 的方案
 
 from app.bailian.common import llm
 

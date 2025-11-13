@@ -12,7 +12,7 @@ from app.bailian.common import llm
 async def create_mcp_stdio_client():
     server_parameters = StdioServerParameters(
         command="python",
-        args=["/Users/chenhui/Downloads/agent/ai-agent-test/app/mcp/stdio/mcp_stdio_server.py"],
+        args=["/Users/chenhui/Downloads/code_agent/ai-code_agent-test/app/mcp/stdio/mcp_stdio_server.py"],
     )
 
     async with stdio_client(server_parameters) as (read, write):

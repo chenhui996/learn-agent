@@ -48,7 +48,7 @@ prompt = prompt_template.format(
     tool_names=", ".join(tool_names),
     input="""
 要求：
-1. 向 /Users/chenhui/Downloads/aiAgent/ai-agent-test/.temp 目录下下入一个新文件，名称为 `index.html` 的文件。
+1. 向 /Users/chenhui/Downloads/aiAgent/ai-code_agent-test/.temp 目录下下入一个新文件，名称为 `index.html` 的文件。
 2. 写一个在线教育产品的官网，包含3个tab，分别是：首页、实战课、体系课和关于我们
 3. 首页展示3个模块，分别是：热门课程、上新课程、爆款课程
 4. 关于我们展示平台的联系方式等基本信息

@@ -15,7 +15,7 @@ completion = client.chat.completions.create( # type: ignore
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
         # 注意：这里修正了 user 和 content 之间的逗号 ，并移除了末尾多余的字符
-        {"role": "user", "content": "智能体为什么叫智能体?他跟普通对话型 agent 有什么区别?麻烦用白话跟我讲"}
+        {"role": "user", "content": "智能体为什么叫智能体?他跟普通对话型 code_agent 有什么区别?麻烦用白话跟我讲"}
     ],
     stream=True
 )
