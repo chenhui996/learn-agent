@@ -5,15 +5,15 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "langchain==0.3.27",
-    "langchain-community==0.3.27",
+    "dashscope==1.23.5",
+    "langchain==0.3.25",
     "langchain-experimental==0.3.4",
-    "langchain-mcp-adapters==0.1.9",
-    "langchain-ollama==0.3.6",
-    "langchain-openai==0.3.28",
+    "langchain-mcp-adapters==0.1.1",
+    "langchain-ollama==0.3.2",
+    "langchain-openai==0.3.16",
     "langgraph==0.6.5",
-    "langgraph-checkpoint-mongodb>=0.2.1",
+    "langgraph-checkpoint-mongodb==0.1.4",
     "langgraph-checkpoint-redis==0.0.7",
-    "openai==1.99.1",
-    "pydantic==2.11.7",
+    "openai==1.78.0",
+    "pydantic==2.11.4",
 ]

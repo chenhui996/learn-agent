@@ -33,7 +33,7 @@ def run_agent():
         # print(res)
         # print("=" * 60)
 
-        res = agent.invoke(input={"messages": [("user", "ok，我来考考你，我是谁？")]}, config=config)
+        res = agent.invoke(input={"messages": [("user", "ok，我再次来考考你的记忆力：我是谁？")]}, config=config)
 
         print("=" * 60)
         print(res)
