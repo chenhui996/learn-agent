@@ -1,3 +1,5 @@
+from rich import print
+
 # 目标：让 agent 具有记忆能力（memory）
 import os
 

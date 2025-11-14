@@ -1,3 +1,5 @@
+from rich import print
+
 import os
 from typing import Optional, Sequence, Any
 
@@ -63,7 +65,7 @@ if __name__ == "__main__":
         model=llm_qwen,
         tools=file_tools,
         checkpointer=memory,
-        debug=True
+        debug=False
     )
 
     config = RunnableConfig(configurable={"thread_id": 1})

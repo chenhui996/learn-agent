@@ -16,4 +16,5 @@ dependencies = [
     "langgraph-checkpoint-redis==0.0.7",
     "openai==1.78.0",
     "pydantic==2.11.4",
+    "rich>=14.2.0",
 ]
