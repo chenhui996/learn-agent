@@ -1,3 +1,5 @@
+import json
+
 from rich import print
 
 import os
@@ -19,6 +21,21 @@ class FileSaver(BaseCheckpointSaver[str]):
 
         os.makedirs(self.base_path, exist_ok=True)
 
+    def _get_checkpoint_path(self, thread_id, checkpoint_id):
+        dir_path = os.path.join(self.base_path, thread_id)  # 文件夹路径
+
+        os.makedirs(dir_path, exist_ok=True)
+
+        file_path = os.path.join(dir_path, checkpoint_id + '.json')  # 文件路径
+
+        return file_path
+
+    @staticmethod
+    def _serialize_checkpoint(data) -> str:
+        import pickle, base64
+        pickled = pickle.dumps(data)
+        return base64.b64encode(pickled).decode()
+
     def get_tuple(self, config: RunnableConfig) -> Optional[CheckpointTuple]:
         """Fetch a checkpoint tuple using the given configuration.
 
@@ -37,7 +54,29 @@ class FileSaver(BaseCheckpointSaver[str]):
             metadata: CheckpointMetadata,
             new_versions: ChannelVersions,
     ) -> RunnableConfig:
-        print("put")
+        # 1. 生成存储的 JSON 文件路径
+        thread_id = config["configurable"]["thread_id"]
+        checkpoint_id = checkpoint["id"]
+        checkpoint_path = self._get_checkpoint_path(thread_id, checkpoint_id)  # JSON 文件存储路径
+
+        # 2. 将 Checkpoint 进行序列化
+        checkpoint_data = {
+            "checkpoint": self._serialize_checkpoint(checkpoint),
+            "metadata": self._serialize_checkpoint(metadata),
+        }
+
+        # 3. 将 Checkpoint 存储到文件系统
+        with open(checkpoint_path, "w", encoding="utf-8") as f:
+            json.dump(checkpoint_data, f, indent=2, ensure_ascii=False)
+
+        # 4. 生成返回值
+        # print("put")
+        return {
+            "configurable": {
+                "thread_id": thread_id,
+                "checkpoint_id": checkpoint_id,
+            }
+        }
 
     def put_writes(
             self,
