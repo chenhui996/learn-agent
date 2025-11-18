@@ -52,28 +52,32 @@ class FileSaver(BaseCheckpointSaver[str]):
         dir_path = os.path.join(self.base_path, thread_id)
         checkpoint_files = list(Path(dir_path).glob("*.json"))  # 利用内置的 Path 工具正则获取文件
         checkpoint_files.sort(key=lambda f: f.stem, reverse=True)
-        latest_checkpoint = checkpoint_files[0]  # 最新的 json 文件
-        checkpoint_id = latest_checkpoint.stem  # 需要读取 文件的 id
-        checkpoint_file_path = self._get_checkpoint_path(thread_id, checkpoint_id)  # 目标文件完整路径
 
-        # 3. 对文件内容进行反序列化
-        with open(checkpoint_file_path, "r", encoding="utf-8") as checkpoint_file:
-            data = json.load(checkpoint_file)
+        if len(checkpoint_files) == 0:
+            return None
+        else:
+            latest_checkpoint = checkpoint_files[0]  # 最新的 json 文件
+            checkpoint_id = latest_checkpoint.stem  # 需要读取 文件的 id
+            checkpoint_file_path = self._get_checkpoint_path(thread_id, checkpoint_id)  # 目标文件完整路径
 
-        checkpoint = self._deserialize_data(data["checkpoint"])
-        metadata = self._deserialize_data(data["metadata"])
+            # 3. 对文件内容进行反序列化
+            with open(checkpoint_file_path, "r", encoding="utf-8") as checkpoint_file:
+                data = json.load(checkpoint_file)
 
-        # 4. 返回 checkpoint 对象
-        return CheckpointTuple(
-            config={
-                "configurable": {
-                    "thread_id": thread_id,
-                    "checkpoint_id": checkpoint_id,
-                }
-            },
-            checkpoint=checkpoint,
-            metadata=metadata,
-        )
+            checkpoint = self._deserialize_data(data["checkpoint"])
+            metadata = self._deserialize_data(data["metadata"])
+
+            # 4. 返回 checkpoint 对象
+            return CheckpointTuple(
+                config={
+                    "configurable": {
+                        "thread_id": thread_id,
+                        "checkpoint_id": checkpoint_id,
+                    }
+                },
+                checkpoint=checkpoint,
+                metadata=metadata,
+            )
 
     # 将全量数据写入文件
     def put(
@@ -123,7 +127,7 @@ class FileSaver(BaseCheckpointSaver[str]):
             task_id: Identifier for the task creating the writes.
             task_path: Path of the task creating the writes.
         """
-        print("put_writes")
+        # print("put_writes")
         pass
 
 
@@ -137,7 +141,14 @@ if __name__ == "__main__":
         debug=False
     )
 
-    config = RunnableConfig(configurable={"thread_id": 1})
-    # res = agent.invoke(input={"messages": "我是 Cain，你是谁？"}, config=config)
-    res = agent.invoke(input={"messages": "我来考考你，我是谁？你还记得吗？"}, config=config)
-    print(res)
+    config = RunnableConfig(configurable={"thread_id": 2})
+
+    while True:
+        user_input = input("用户：")
+
+        if user_input == "exit" or user_input == ":wq":
+            break
+
+        resp = agent.invoke(input={"messages": user_input}, config=config)
+        print("助理：", resp["messages"][-1].content)
+        print()
