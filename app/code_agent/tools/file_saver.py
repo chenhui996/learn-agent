@@ -1,4 +1,6 @@
 import json
+from pathlib import Path
+import pickle, base64
 
 from rich import print
 
@@ -32,21 +34,48 @@ class FileSaver(BaseCheckpointSaver[str]):
 
     @staticmethod
     def _serialize_checkpoint(data) -> str:
-        import pickle, base64
         pickled = pickle.dumps(data)
         return base64.b64encode(pickled).decode()
 
+    @staticmethod
+    def _deserialize_data(data):
+        decoded = base64.b64decode(data)  # 序列化：转换内容
+        return pickle.loads(decoded)  # 再将转化后的内容，反序列化会原来的 对象结构
+
+    # 根据持久化数据恢复记忆
     def get_tuple(self, config: RunnableConfig) -> Optional[CheckpointTuple]:
-        """Fetch a checkpoint tuple using the given configuration.
+        # 1. 找到正确的 checkpoint 文件路径
+        thread_id = config["configurable"]["thread_id"]
+        # checkpoint_id = config["configurable"].get("checkpoint_id")
 
-        Args:
-            config: Configuration specifying which checkpoint to retrieve.
+        # 2. 读取 checkpoint 文件内容
+        dir_path = os.path.join(self.base_path, thread_id)
+        checkpoint_files = list(Path(dir_path).glob("*.json"))  # 利用内置的 Path 工具正则获取文件
+        checkpoint_files.sort(key=lambda f: f.stem, reverse=True)
+        latest_checkpoint = checkpoint_files[0]  # 最新的 json 文件
+        checkpoint_id = latest_checkpoint.stem  # 需要读取 文件的 id
+        checkpoint_file_path = self._get_checkpoint_path(thread_id, checkpoint_id)  # 目标文件完整路径
 
-        Returns:
-            Optional[CheckpointTuple]: The requested checkpoint tuple, or None if not found.
-        """
-        print("get_tuple")
+        # 3. 对文件内容进行反序列化
+        with open(checkpoint_file_path, "r", encoding="utf-8") as checkpoint_file:
+            data = json.load(checkpoint_file)
 
+        checkpoint = self._deserialize_data(data["checkpoint"])
+        metadata = self._deserialize_data(data["metadata"])
+
+        # 4. 返回 checkpoint 对象
+        return CheckpointTuple(
+            config={
+                "configurable": {
+                    "thread_id": thread_id,
+                    "checkpoint_id": checkpoint_id,
+                }
+            },
+            checkpoint=checkpoint,
+            metadata=metadata,
+        )
+
+    # 将全量数据写入文件
     def put(
             self,
             config: RunnableConfig,
@@ -78,6 +107,7 @@ class FileSaver(BaseCheckpointSaver[str]):
             }
         }
 
+    # 写入增量数据（可以不实现）
     def put_writes(
             self,
             config: RunnableConfig,
@@ -108,5 +138,6 @@ if __name__ == "__main__":
     )
 
     config = RunnableConfig(configurable={"thread_id": 1})
-    res = agent.invoke(input={"messages": "我是 Cain，你是谁？"}, config=config)
+    # res = agent.invoke(input={"messages": "我是 Cain，你是谁？"}, config=config)
+    res = agent.invoke(input={"messages": "我来考考你，我是谁？你还记得吗？"}, config=config)
     print(res)
