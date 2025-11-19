@@ -2,8 +2,6 @@ import json
 from pathlib import Path
 import pickle, base64
 
-from rich import print
-
 import os
 from typing import Optional, Sequence, Any
 
