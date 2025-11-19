@@ -130,6 +130,63 @@ class FileSaver(BaseCheckpointSaver[str]):
         # print("put_writes")
         pass
 
+    async def aget_tuple(self, config: RunnableConfig) -> CheckpointTuple | None:
+        """Asynchronously fetch a checkpoint tuple using the given configuration.
+
+        Args:
+            config: Configuration specifying which checkpoint to retrieve.
+
+        Returns:
+            Optional[CheckpointTuple]: The requested checkpoint tuple, or None if not found.
+
+        Raises:
+            NotImplementedError: Implement this method in your custom checkpoint saver.
+        """
+        return self.get_tuple(config)
+
+    async def aput(
+            self,
+            config: RunnableConfig,
+            checkpoint: Checkpoint,
+            metadata: CheckpointMetadata,
+            new_versions: ChannelVersions,
+    ) -> RunnableConfig:
+        """Asynchronously store a checkpoint with its configuration and metadata.
+
+        Args:
+            config: Configuration for the checkpoint.
+            checkpoint: The checkpoint to store.
+            metadata: Additional metadata for the checkpoint.
+            new_versions: New channel versions as of this write.
+
+        Returns:
+            RunnableConfig: Updated configuration after storing the checkpoint.
+
+        Raises:
+            NotImplementedError: Implement this method in your custom checkpoint saver.
+        """
+        return self.put(config, checkpoint, metadata, new_versions)
+
+    async def aput_writes(
+            self,
+            config: RunnableConfig,
+            writes: Sequence[tuple[str, Any]],
+            task_id: str,
+            task_path: str = "",
+    ) -> None:
+        """Asynchronously store intermediate writes linked to a checkpoint.
+
+        Args:
+            config: Configuration of the related checkpoint.
+            writes: List of writes to store.
+            task_id: Identifier for the task creating the writes.
+            task_path: Path of the task creating the writes.
+
+        Raises:
+            NotImplementedError: Implement this method in your custom checkpoint saver.
+        """
+        return self.put_writes(config, writes, task_id, task_path)
+
 
 if __name__ == "__main__":
     memory = FileSaver()  # 实例化 file saver
