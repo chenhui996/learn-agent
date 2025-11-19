@@ -17,6 +17,13 @@ def run_shell_command(command):
         print(e)
 
 
+def run_shell_command_by_popen(commands):
+    p = subprocess.Popen(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True)
+    stdout, stderr = p.communicate()
+    return stdout, stderr
+
+
 if __name__ == '__main__':
-    ret = run_shell_command("ls -al | grep terminal")
-    print(ret)
+    # ret = run_shell_command("ls -al | grep terminal")
+    success, failed = run_shell_command_by_popen("ls -al")
+    print(success)
