@@ -1,4 +1,5 @@
 import subprocess
+import time
 
 
 # 获取 terminal 的 window id
@@ -65,9 +66,42 @@ end tell
     if error:
         return False
     else:
+        time.sleep(5)
         return get_all_terminal_window_ids()
 
+
+# 实现向终端输入脚本命令(可以理解为：自动打开终端，输入命令，且执行)
+def run_script_in_terminal(script):
+    output, error = run_applescript(f"""
+tell application "Terminal"
+    activate
+    if(count of windows) > 0 then
+        do script "{script}" in window 1
+    else
+        do script "{script}"
+    end if 
+end tell""")
+    if error:
+        return error
+    else:
+        return output
+
+# 提供给智能体的工具：让 agent 知道我们执行了哪些命令
+def get_terminal_full_text():
+    output, error = run_applescript(f"""
+    tell application "Terminal"
+        set fullText to history of selected tab of front window
+    end tell""")
+    if error:
+        return error
+    else:
+        return output
+
+
 if __name__ == '__main__':
-    close_terminal_if_open()
-    window_ids = open_new_terminal()
-    print(window_ids)
+    # close_terminal_if_open()
+    # window_ids = open_new_terminal()
+    # print(window_ids)
+    # run_script_in_terminal("pwd")
+    full_text = get_terminal_full_text()
+    print(full_text)
