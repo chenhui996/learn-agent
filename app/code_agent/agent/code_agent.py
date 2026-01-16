@@ -1,7 +1,8 @@
 import asyncio
 import time
 
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.messages import AIMessage, ToolMessage, SystemMessage
+from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
@@ -12,7 +13,7 @@ from app.code_agent.tools.file_tools import file_tools
 from app.code_agent.tools.terminal_tools import get_stdio_terminal_tools
 
 
-def format_debug_output(step_name: str, content: str, is_tool_call = False) -> None:
+def format_debug_output(step_name: str, content: str, is_tool_call=False) -> None:
     if is_tool_call:
         print(f'🔄 【工具调用】 {step_name}')
         print("-" * 40)
@@ -33,14 +34,27 @@ async def run_agent():
     terminal_tools = await get_stdio_terminal_tools()
     tools = file_tools + terminal_tools
 
+    prompt = PromptTemplate.from_template(template="""
+# 角色
+你是一名优秀的工程师，你的名字叫做{name}
+
+# 规范
+## 使用 终端工具 执行 shell 命令的步骤：
+- 步骤1: 关闭所有终端，调用 *关闭终端* 工具 close_terminal
+- 步骤2: 打开一个新的终端，调用 *打开终端* 工具 open_terminal
+- 步骤3: 向终端输入命令，调用 *运行终端脚本* 工具 run_terminal_script
+- 步骤4: 查看终端执行结果，调用 *获取终端文本* 工具 get_terminal_text
+""")
+
     agent = create_react_agent(
         model=llm_qwen,
         tools=tools,
         checkpointer=memory,
         debug=False,
+        prompt=SystemMessage(content=prompt.format(name="Bot")),
     )
 
-    config = RunnableConfig(configurable={"thread_id": 576})
+    config = RunnableConfig(configurable={"thread_id": 2})
 
     while True:
         user_input = input("用户: ")
@@ -54,6 +68,8 @@ async def run_agent():
         iteration_count = 0
         start_time = time.time()
         last_tool_time = start_time
+
+        # 从 RAG 知识库中读取知识，并拼接到提示词中
 
         async for chunk in agent.astream(input={"messages": user_input}, config=config):
             iteration_count += 1

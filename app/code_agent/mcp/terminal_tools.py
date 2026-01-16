@@ -77,7 +77,7 @@ end tell""")
     if error:
         return f"打开终端失败: {error}"
     else:
-        time.sleep(2)  # 减少等待时间
+        # time.sleep(5)  # 减少等待时间
         window_ids = get_all_terminal_window_ids()
         return f"终端已打开，窗口ID: {window_ids}"
 
