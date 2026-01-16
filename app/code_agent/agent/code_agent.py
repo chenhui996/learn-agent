@@ -3,44 +3,49 @@ import time
 
 from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 
 from app.code_agent.model.qwen import llm_qwen
 from app.code_agent.tools.file_saver import FileSaver
 from app.code_agent.tools.file_tools import file_tools
-from app.code_agent.tools.shell_tools import get_stdio_shell_tools
+from app.code_agent.tools.terminal_tools import get_stdio_terminal_tools
 
 
-def format_debug_output(step_name: str, content: str, is_tool_call=False) -> None:
+def format_debug_output(step_name: str, content: str, is_tool_call = False) -> None:
     if is_tool_call:
         print(f'🔄 【工具调用】 {step_name}')
+        print("-" * 40)
+        print(content.strip())
+        print("-" * 40)
     else:
         print(f"💭 【{step_name}】")
-
-    print("-" * 40)
-    print(content.strip())
-    print("-" * 40)
+        print("-" * 40)
+        print(content.strip())
+        print("-" * 40)
 
 
 async def run_agent():
-    memory = FileSaver()  # 实例化 file saver
+    memory = FileSaver()
+    # memory = MemorySaver()
 
-    shell_tools = await get_stdio_shell_tools()
-    tools = file_tools + shell_tools
+    # shell_tools = await get_stdio_shell_tools()
+    terminal_tools = await get_stdio_terminal_tools()
+    tools = file_tools + terminal_tools
 
     agent = create_react_agent(
         model=llm_qwen,
         tools=tools,
         checkpointer=memory,
-        debug=False
+        debug=False,
     )
 
-    config = RunnableConfig(configurable={"thread_id": 23})
+    config = RunnableConfig(configurable={"thread_id": 571})
 
     while True:
-        user_input = input("用户：")
+        user_input = input("用户: ")
 
-        if user_input == "exit" or user_input == ":wq":
+        if user_input.lower() == "exit":
             break
 
         print("\n🤖 助手正在思考...")
@@ -60,14 +65,15 @@ async def run_agent():
 
             for node_name, node_output in items:
                 if "messages" in node_output:
+                    print(node_output["messages"])
                     for msg in node_output["messages"]:
                         if isinstance(msg, AIMessage):
                             if msg.content:
-                                # print(msg)
-                                format_debug_output("助手思考", msg.content)
+                                format_debug_output("AI思考", msg.content)
                             else:
                                 for tool in msg.tool_calls:
-                                    format_debug_output("工具选择", f"{tool['name']}: {tool['args']}")
+                                    format_debug_output("工具调用", f"{tool['name']}: {tool['args']}")
+
                         elif isinstance(msg, ToolMessage):
                             tool_name = getattr(msg, "name", "unknown")
                             tool_content = msg.content
@@ -77,17 +83,17 @@ async def run_agent():
                             last_tool_time = current_time
 
                             tool_result = f"""🔧 工具：{tool_name}
-🔚 结果：
+📤 结果：
 {tool_content}
 ✅ 状态：执行完成，可以开始下一个任务
-⏰ 执行时间：{tool_duration:.2f}秒
-"""
+️⏱️ 执行时间：{tool_duration:.2f}秒"""
+
                             format_debug_output("工具执行结果", tool_result, is_tool_call=True)
 
                         else:
                             format_debug_output("未实现", f"暂未实现的打印内容: {chunk}")
 
-    print()
+        print()
 
 
 asyncio.run(run_agent())
