@@ -86,10 +86,6 @@ end tell""")
 def run_script_in_terminal(script: 
     Annotated[str, Field(description="要在终端中执行的脚本命令", examples="ls -al")]) -> str:
     """在终端中运行指定的脚本命令"""
-    print("-" * 50)
-    print("run_script_in_terminal:")
-    print(script)
-    print("-" * 50)
     output, error = run_applescript(f"""
 tell application "Terminal"
     activate
@@ -102,7 +98,7 @@ end tell""")
     if error:
         return f"执行脚本失败: {error}"
     else:
-        return f"脚本已执行: {script}，任务已完成"
+        return f"脚本执行成功"
 
 
 @mcp.tool(name="get_terminal_text", description="获取终端的完整文本内容")

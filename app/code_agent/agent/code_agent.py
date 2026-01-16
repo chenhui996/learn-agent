@@ -40,7 +40,7 @@ async def run_agent():
         debug=False,
     )
 
-    config = RunnableConfig(configurable={"thread_id": 571})
+    config = RunnableConfig(configurable={"thread_id": 576})
 
     while True:
         user_input = input("用户: ")
@@ -65,7 +65,6 @@ async def run_agent():
 
             for node_name, node_output in items:
                 if "messages" in node_output:
-                    print(node_output["messages"])
                     for msg in node_output["messages"]:
                         if isinstance(msg, AIMessage):
                             if msg.content:
