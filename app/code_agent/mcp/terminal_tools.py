@@ -37,7 +37,7 @@ return outputList
 
 
 @mcp.tool(name="close_terminal", description="关闭终端应用程序")
-def close_terminal_if_open() -> str:
+def close_terminal() -> str:
     """关闭终端应用程序（如果正在运行）"""
     output, error = run_applescript("""
 tell application "System Events"
@@ -49,11 +49,12 @@ end tell
     if error:
         return f"关闭终端失败: {error}"
     else:
+        # time.sleep(2)  # 减少等待时间
         return "终端已成功关闭"
 
 
 @mcp.tool(name="open_terminal", description="打开新的终端窗口")
-def open_new_terminal(window_id: 
+def open_terminal(window_id:
     Annotated[str, Field(description="可选的窗口ID，为空则打开新窗口", examples="12345")] = "") -> str:
     """打开新的终端窗口或激活指定的窗口"""
     if window_id:
@@ -77,13 +78,13 @@ end tell""")
     if error:
         return f"打开终端失败: {error}"
     else:
-        # time.sleep(5)  # 减少等待时间
+        # time.sleep(2)  # 减少等待时间
         window_ids = get_all_terminal_window_ids()
         return f"终端已打开，窗口ID: {window_ids}"
 
 
 @mcp.tool(name="run_terminal_script", description="在终端中运行脚本命令。")
-def run_script_in_terminal(script: 
+def run_terminal_script(script:
     Annotated[str, Field(description="要在终端中执行的脚本命令", examples="ls -al")]) -> str:
     """在终端中运行指定的脚本命令"""
     output, error = run_applescript(f"""
@@ -102,7 +103,7 @@ end tell""")
 
 
 @mcp.tool(name="get_terminal_text", description="获取终端的完整文本内容")
-def get_terminal_full_text() -> str:
+def get_terminal_text() -> str:
     """获取当前选中终端标签页的完整历史文本"""
     output, error = run_applescript(f"""
 tell application "Terminal"
@@ -116,10 +117,10 @@ end tell""")
 
 if __name__ == '__main__':
     mcp.run(transport="stdio")
-    # close_terminal_if_open()
-    # window_ids = open_new_terminal()
+    # close_terminal()
+    # window_ids = open_terminal()
     # print(window_ids)
 
-    # run_script_in_terminal("pwd")
-    # full_text = get_terminal_full_text()
+    # run_terminal_script("pwd")
+    # full_text = get_terminal_text()
     # print(full_text)

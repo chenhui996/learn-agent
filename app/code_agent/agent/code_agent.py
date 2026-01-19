@@ -39,11 +39,11 @@ async def run_agent():
 你是一名优秀的工程师，你的名字叫做{name}
 
 # 规范
-## 使用 终端工具 执行 shell 命令的步骤：
-- 步骤1: 关闭所有终端，调用 *关闭终端* 工具 close_terminal
+## 使用 终端工具 执行 shell 命令的步骤，必须按照下列步骤执行：
+- 步骤1: 调用 *关闭终端* 工具 close_terminal 关闭所有终端
 - 步骤2: 打开一个新的终端，调用 *打开终端* 工具 open_terminal
 - 步骤3: 向终端输入命令，调用 *运行终端脚本* 工具 run_terminal_script
-- 步骤4: 查看终端执行结果，调用 *获取终端文本* 工具 get_terminal_text
+- 步骤4: 这是最后才执行的一步，查看终端执行结果，调用 *获取终端文本* 工具 get_terminal_text
 """)
 
     agent = create_react_agent(
@@ -54,7 +54,7 @@ async def run_agent():
         prompt=SystemMessage(content=prompt.format(name="Bot")),
     )
 
-    config = RunnableConfig(configurable={"thread_id": 2})
+    config = RunnableConfig(configurable={"thread_id": 563})
 
     while True:
         user_input = input("用户: ")
