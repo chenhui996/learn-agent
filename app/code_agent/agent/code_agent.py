@@ -33,6 +33,7 @@ async def run_agent():
     # shell_tools = await get_stdio_shell_tools()
     terminal_tools = await get_stdio_terminal_tools()
     tools = file_tools + terminal_tools
+    # 方案二：提供一个 rag 工具，让智能体通过工具查询知识
 
     prompt = PromptTemplate.from_template(template="""
 # 角色
@@ -54,7 +55,7 @@ async def run_agent():
         prompt=SystemMessage(content=prompt.format(name="Bot")),
     )
 
-    config = RunnableConfig(configurable={"thread_id": 563})
+    config = RunnableConfig(configurable={"thread_id": 1})
 
     while True:
         user_input = input("用户: ")
@@ -69,7 +70,7 @@ async def run_agent():
         start_time = time.time()
         last_tool_time = start_time
 
-        # 从 RAG 知识库中读取知识，并拼接到提示词中
+        # 方案一：从 RAG 阿里云百炼知识库中读取知识，并拼接到提示词中
 
         async for chunk in agent.astream(input={"messages": user_input}, config=config):
             iteration_count += 1
