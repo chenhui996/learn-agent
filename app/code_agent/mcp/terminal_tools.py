@@ -1,3 +1,5 @@
+# mac os 专用，windows 为 powershell_tools.py 文件
+
 import subprocess
 import time
 from typing import Annotated
