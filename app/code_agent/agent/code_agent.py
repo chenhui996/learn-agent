@@ -51,7 +51,7 @@ async def run_agent():
         model=llm_qwen,
         tools=tools,
         checkpointer=memory,
-        debug=False,
+        debug=True,
         prompt=SystemMessage(content=prompt.format(name="Bot")),
     )
 

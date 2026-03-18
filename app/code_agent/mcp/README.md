@@ -17,3 +17,16 @@
 ## 上述目的
 
 - 转换后，能让 **大模型** 或者 **智能体**，能够直接调用。
+
+## 完整链路文件
+
+1. mcp文件：
+   - /mcp/shell_tools.py
+2. tools文件夹：
+   - /tools/terminal_tools.py
+3. 使用的智能体：
+   - /agents/code_agent.py
+
+## 细节知识
+
+- **Annotated**：mcp 能够看懂的类型。

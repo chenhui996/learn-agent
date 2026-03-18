@@ -7,10 +7,10 @@ from typing import Annotated
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
+# mcp 实例
 mcp = FastMCP()
 
-
-@mcp.tool(name="run_shell", description="Run shell command")
+@mcp.tool(name="run_shell", description="Run shell command") # 写给大模型看的
 def run_shell_command(command:
 Annotated[str, Field(description="shell command will be executed", examples=["ls -al"])]) -> str:
     try:

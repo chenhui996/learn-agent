@@ -7,6 +7,7 @@ from typing import Annotated
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
+# mcp 实例
 mcp = FastMCP()
 
 def run_applescript(script):
