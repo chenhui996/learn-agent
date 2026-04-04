@@ -1,17 +1,19 @@
 import os
 
-import alibabacloud_bailian20231229
 import alibabacloud_bailian20231229.client
+
+from typing import Annotated
+from pydantic import Field
 from alibabacloud_tea_openapi import models as open_api_models
 from alibabacloud_bailian20231229 import models as bailian_20231229_models
 from alibabacloud_tea_util import models as util_models
+from dotenv import load_dotenv
 
 from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP()
 
-from typing import Annotated
-from pydantic import Field
+load_dotenv()
 
 bailian_20231229_client = alibabacloud_bailian20231229.client.Client
 

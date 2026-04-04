@@ -45,9 +45,6 @@ async def run_agent():
     prompt = PromptTemplate.from_template(template="""
 # 角色
 你是一名优秀的工程师，你的名字叫做{name}
-
-# 要求
-执行任务之前先使用 query_rag 工具查询知识库，根据知识库中的知识执行任务
 """)
 
     agent = create_react_agent(
@@ -58,7 +55,7 @@ async def run_agent():
         prompt=SystemMessage(content=prompt.format(name="Bot")),
     )
 
-    config = RunnableConfig(configurable={"thread_id": 917})
+    config = RunnableConfig(configurable={"thread_id": 918})
 
     while True:
         user_input = input("用户: ")
@@ -73,20 +70,17 @@ async def run_agent():
         start_time = time.time()
         last_tool_time = start_time
 
-        # 方案一：从 RAG 阿里云百炼知识库中读取知识，并拼接到提示词中
-#         rag = query_rag_from_bailian(user_input)
-#
-#         prompt = f"""
-# # 相关知识
-# {rag}
-#
-# # 用户问题
-# {user_input}
-# """
+        user_prompt = f"""
+# 要求
+执行任务之前先使用 query_rag 工具查询知识库，根据知识库中的知识执行任务
+
+# 用户问题
+{user_input}
+"""
 
         # print(prompt)
 
-        async for chunk in agent.astream(input={"messages": user_input}, config=config):
+        async for chunk in agent.astream(input={"messages": user_prompt}, config=config):
             iteration_count += 1
 
             print(f"\n📊 第 {iteration_count} 步执行：")
