@@ -36,7 +36,7 @@ async def run_agent():
     terminal_tools = await get_stdio_terminal_tools()
     rag_tools = await get_stdio_rag_tools()
     tools = (
-            # file_tools +
+        # file_tools +
             terminal_tools +
             rag_tools)
 
@@ -55,7 +55,7 @@ async def run_agent():
         prompt=SystemMessage(content=prompt.format(name="Bot")),
     )
 
-    config = RunnableConfig(configurable={"thread_id": 918})
+    config = RunnableConfig(configurable={"thread_id": 202604052}, recursion_limit=100)
 
     while True:
         user_input = input("用户: ")
@@ -80,6 +80,7 @@ async def run_agent():
 
         # print(prompt)
 
+        # 在 /Users/chenhui/Downloads/agent/ai-agent-test/.temp/project/ 目录下，创建一个名为 vue2-test 的 vue2 项目
         async for chunk in agent.astream(input={"messages": user_prompt}, config=config):
             iteration_count += 1
 
