@@ -8,6 +8,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 
 from app.code_agent.model.qwen import llm_qwen
+from app.code_agent.rag.rag import create_client, retrieve_index
 from app.code_agent.tools.file_saver import FileSaver
 from app.code_agent.tools.file_tools import file_tools
 from app.code_agent.tools.terminal_tools import get_stdio_terminal_tools
@@ -45,11 +46,11 @@ async def run_agent():
         model=llm_qwen,
         tools=tools,
         checkpointer=memory,
-        debug=True,
+        debug=False,
         prompt=SystemMessage(content=prompt.format(name="Bot")),
     )
 
-    config = RunnableConfig(configurable={"thread_id": 1})
+    config = RunnableConfig(configurable={"thread_id": 912})
 
     while True:
         user_input = input("用户: ")
@@ -65,8 +66,24 @@ async def run_agent():
         last_tool_time = start_time
 
         # 方案一：从 RAG 阿里云百炼知识库中读取知识，并拼接到提示词中
+        workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
+        index_id = 'miuptjzt11'  # 阿里云百炼 -> 知识库 id
+        query = '终端操作规范'  # 查询内容
+        bailian_client = create_client()
+        rag = retrieve_index(bailian_client, workspace_id, index_id, user_input)
+        # print(rag.body.data.nodes[0].text)
 
-        async for chunk in agent.astream(input={"messages": user_input}, config=config):
+        prompt = f"""
+# 相关知识
+{rag.body.data.nodes[0].text}
+
+# 用户问题
+{user_input}
+"""
+
+        # print(prompt)
+
+        async for chunk in agent.astream(input={"messages": prompt}, config=config):
             iteration_count += 1
 
             print(f"\n📊 第 {iteration_count} 步执行：")
