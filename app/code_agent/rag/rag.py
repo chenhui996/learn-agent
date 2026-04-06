@@ -1,5 +1,5 @@
 import os
-
+import hashlib
 import alibabacloud_bailian20231229.client
 
 from typing import Annotated
@@ -16,6 +16,31 @@ mcp = FastMCP()
 load_dotenv()
 
 bailian_20231229_client = alibabacloud_bailian20231229.client.Client
+
+
+def calculate_md5(file_path: str) -> str:
+    """
+    计算文件的 MD5 哈希值。
+
+    参数:
+        file_path (str): 文件路径。
+
+    返回:
+        str: 文件的 MD5 哈希值。
+    """
+    hash_md5 = hashlib.md5()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+
+def get_file_info(file_path):
+    file_name = os.path.basename(file_path)
+    file_size = os.path.getsize(file_path)
+    file_md5 = calculate_md5(file_path)
+
+    return file_name, file_size, file_md5
 
 
 # 创建一个百炼的客户端
@@ -51,16 +76,14 @@ def retrieve_index(client, workspace_id, index_id, query):
 @mcp.tool(name="query_rag", description="从百炼平台查询知识库信息")
 def query_rag_from_bailian(
         query: Annotated[str, Field(description="访问知识库查询的内容", examples=["终端的操作规范"])]) -> str:
-    # 2. 实例化创建一个 百炼 SDK 客户端
-    bailian_client = create_client()
-
+    bailian_client = create_client()  # 2. 实例化创建一个 百炼 SDK 客户端
     print(bailian_client)
     # 运行后若成功打印下面这种格式，证明创建成功
     # <alibabacloud_bailian20231229.client.Client object at 0x10cc4f4d0>
-
-    workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
+    rag_workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
     index_id = 'miuptjzt11'  # 阿里云百炼 -> 知识库 id
-    rag = retrieve_index(bailian_client, workspace_id, index_id, query)
+
+    rag = retrieve_index(bailian_client, rag_workspace_id, index_id, query)
 
     result = ""
 
@@ -76,10 +99,52 @@ def query_rag_from_bailian(
     return result
 
 
+# 申请租约
+def apply_lease(client, category_id, file_name, file_md5, file_size, workspace_id):
+    header = {}
+    runtime = util_models.RuntimeOptions()
+    request = bailian_20231229_models.ApplyFileUploadLeaseRequest(
+        file_name=file_name,
+        md_5=file_md5,
+        size_in_bytes=file_size,
+    )
+    return client.apply_file_upload_lease_with_options(
+        category_id,
+        workspace_id,
+        request,
+        header,
+        runtime
+    )
+
+
+def apply_lease_by_file_path(category_id, workspace_id, file_path):
+    client = create_client()
+    file_name, file_size, file_md5 = get_file_info(file_path)
+
+    return apply_lease(client, category_id, file_name, file_md5, file_size, workspace_id)
+
+
 if __name__ == '__main__':
-    mcp.run(transport="stdio")
+    # mcp.run(transport="stdio")
     # 3. 查询知识
     # 查询知识，最主要的，就是调用查询接口：retrieve，于是我们自己实现一个函数：retrieve_index
     # query_text = '终端操作规范'  # 查询内容
     # rag_test = query_rag_from_bailian(query_text)
     # print(rag_test)
+
+    # ------------------------------------------------------------------------------------------------
+
+    # 测试上传知识到 百炼 RAG 知识库
+    rag_file_path = "/Users/chenhui/Downloads/agent/ai-agent-test/app/code_agent/rag/rag_test.txt"
+    rag_category_id = "cate_9ec74c16bd614b4fa991a3d10b752267_12897951"
+    rag_workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
+
+    lease = apply_lease_by_file_path(rag_category_id, rag_workspace_id, rag_file_path)
+
+    # ------------------------------------------------------------------------------------------------
+
+    print(lease)
+    # 成功获取 upload lease id 的打印如下：
+    # FileUploadLeaseId = 'f7fab731a4e44a1ca601029b4b88928a.1775463307999'
+
+    # ------------------------------------------------------------------------------------------------
