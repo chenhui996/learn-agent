@@ -3,6 +3,8 @@ import hashlib
 import alibabacloud_bailian20231229.client
 
 from typing import Annotated
+
+import requests
 from pydantic import Field
 from alibabacloud_tea_openapi import models as open_api_models
 from alibabacloud_bailian20231229 import models as bailian_20231229_models
@@ -123,6 +125,20 @@ def apply_lease_by_file_path(category_id, workspace_id, file_path):
 
     return apply_lease(client, category_id, file_name, file_md5, file_size, workspace_id)
 
+def upload_file_to_bailian(upload_url, headers, file_path):
+    with open(file_path, "rb") as f:
+        file_content = f.read()
+
+    upload_headers = {
+        "Content-Type": headers["Content-Type"],
+        "X-bailian-extra": headers["X-bailian-extra"],
+    }
+
+    # 上传文件：1. 调用内置库的 request 下的 put 方法，将数据文件上传至百炼
+    response = requests.put(upload_url, data=file_content, headers=upload_headers)
+    # print(response.status_code)
+    response.raise_for_status()
+
 
 if __name__ == '__main__':
     # mcp.run(transport="stdio")
@@ -143,8 +159,25 @@ if __name__ == '__main__':
 
     # ------------------------------------------------------------------------------------------------
 
-    print(lease)
+    # print(lease)
     # 成功获取 upload lease id 的打印如下：
     # FileUploadLeaseId = 'f7fab731a4e44a1ca601029b4b88928a.1775463307999'
 
     # ------------------------------------------------------------------------------------------------
+
+    # 上传测试数据到百炼数据中心
+
+    # 上传文件：
+    # 1. 调用内置库的 request 下的 put 方法，将数据文件上传至百炼
+    # 2. 将文件添加到数据中心的 “指定类目” 下
+
+
+    headers = lease.body.data.param.headers
+    lease_id = lease.body.data.file_upload_lease_id
+    upload_url = lease.body.data.param.url
+
+    # print(headers)
+    # print(lease_id)
+    # print(upload_url)
+
+    upload_file_to_bailian(upload_url, headers, rag_file_path)
