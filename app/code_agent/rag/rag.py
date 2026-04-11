@@ -119,11 +119,11 @@ def apply_lease(client, category_id, file_name, file_md5, file_size, workspace_i
     )
 
 
-def apply_lease_by_file_path(category_id, workspace_id, file_path):
-    client = create_client()
+def apply_lease_by_file_path(client, category_id, workspace_id, file_path):
     file_name, file_size, file_md5 = get_file_info(file_path)
 
     return apply_lease(client, category_id, file_name, file_md5, file_size, workspace_id)
+
 
 def upload_file_to_bailian(upload_url, headers, file_path):
     with open(file_path, "rb") as f:
@@ -140,6 +140,19 @@ def upload_file_to_bailian(upload_url, headers, file_path):
     response.raise_for_status()
 
 
+def add_file_to_bailian_category(client, lease_id, parser, category_id, workspace_id):
+    headers = {}
+    runtime = util_models.RuntimeOptions()
+
+    request = bailian_20231229_models.AddFileRequest(
+        parser=parser,
+        lease_id=lease_id,
+        category_id=category_id,
+    )
+
+    return client.add_file_with_options(workspace_id, request, headers, runtime)
+
+
 if __name__ == '__main__':
     # mcp.run(transport="stdio")
     # 3. 查询知识
@@ -152,10 +165,11 @@ if __name__ == '__main__':
 
     # 测试上传知识到 百炼 RAG 知识库
     rag_file_path = "/Users/chenhui/Downloads/agent/ai-agent-test/app/code_agent/rag/rag_test.txt"
-    rag_category_id = "cate_9ec74c16bd614b4fa991a3d10b752267_12897951"
+    rag_category_id = "cate_9ec74c16bd614b4fa991a3d10b752267_12897951" # 百炼类目名：智能体控制分类
     rag_workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
+    bailian_client = create_client()
 
-    lease = apply_lease_by_file_path(rag_category_id, rag_workspace_id, rag_file_path)
+    lease = apply_lease_by_file_path(bailian_client, rag_category_id, rag_workspace_id, rag_file_path)
 
     # ------------------------------------------------------------------------------------------------
 
@@ -170,8 +184,6 @@ if __name__ == '__main__':
     # 上传文件：
     # 1. 调用内置库的 request 下的 put 方法，将数据文件上传至百炼
     # 2. 将文件添加到数据中心的 “指定类目” 下
-
-
     headers = lease.body.data.param.headers
     lease_id = lease.body.data.file_upload_lease_id
     upload_url = lease.body.data.param.url
@@ -181,3 +193,13 @@ if __name__ == '__main__':
     # print(upload_url)
 
     upload_file_to_bailian(upload_url, headers, rag_file_path)
+
+    # lease_id = 'fc2efa921230467d90c832b5b4c95e46.1775904428797'
+
+    # 下一步执行完，刷新百炼数据中心页面，查看是否成功上传
+    add_file_response = add_file_to_bailian_category(bailian_client, lease_id, "DASHSCOPE_DOCMIND", rag_category_id, rag_workspace_id)
+    print(add_file_response)
+    rag_file_id = add_file_response.body.data.file_id
+    print(rag_file_id)
+
+    # ------------------------------------------------------------------------------------------------
