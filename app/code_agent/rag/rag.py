@@ -134,7 +134,6 @@ def upload_file_to_bailian(upload_url, headers, file_path):
         "X-bailian-extra": headers["X-bailian-extra"],
     }
 
-    # 上传文件：1. 调用内置库的 request 下的 put 方法，将数据文件上传至百炼
     response = requests.put(upload_url, data=file_content, headers=upload_headers)
     # print(response.status_code)
     response.raise_for_status()
@@ -153,53 +152,64 @@ def add_file_to_bailian_category(client, lease_id, parser, category_id, workspac
     return client.add_file_with_options(workspace_id, request, headers, runtime)
 
 
-if __name__ == '__main__':
-    # mcp.run(transport="stdio")
-    # 3. 查询知识
-    # 查询知识，最主要的，就是调用查询接口：retrieve，于是我们自己实现一个函数：retrieve_index
-    # query_text = '终端操作规范'  # 查询内容
-    # rag_test = query_rag_from_bailian(query_text)
-    # print(rag_test)
+def describe_file(client, workspace_id, file_id):
+    headers = {}
+    runtime = util_models.RuntimeOptions()
 
-    # ------------------------------------------------------------------------------------------------
+    return client.describe_file_with_options(workspace_id, file_id, headers, runtime)
 
-    # 测试上传知识到 百炼 RAG 知识库
-    rag_file_path = "/Users/chenhui/Downloads/agent/ai-agent-test/app/code_agent/rag/rag_test.txt"
-    rag_category_id = "cate_9ec74c16bd614b4fa991a3d10b752267_12897951" # 百炼类目名：智能体控制分类
-    rag_workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
-    bailian_client = create_client()
 
-    lease = apply_lease_by_file_path(bailian_client, rag_category_id, rag_workspace_id, rag_file_path)
+# 上传知识到 百炼 RAG 知识库
+def upload_rag_file_to_bailian(client, workspace_id, category_id, file_path):
+    """
+    上传文件到百炼数据中心，并添加到指定分类
+    
+    params:
+        client: 百炼 客户端
+        workspace_id: 百炼 业务空间ID（一级）
+        category_id: 百炼 分类ID（二级）
+        file_path: 本地 待上传的 文件路径
+    return:
+        file props: 文件上传状态
+    """
 
-    # ------------------------------------------------------------------------------------------------
+    # 获取百炼数据中心的 文件租约
+    lease = apply_lease_by_file_path(client, category_id, workspace_id, file_path)
 
-    # print(lease)
-    # 成功获取 upload lease id 的打印如下：
-    # FileUploadLeaseId = 'f7fab731a4e44a1ca601029b4b88928a.1775463307999'
-
-    # ------------------------------------------------------------------------------------------------
-
-    # 上传测试数据到百炼数据中心
-
-    # 上传文件：
-    # 1. 调用内置库的 request 下的 put 方法，将数据文件上传至百炼
-    # 2. 将文件添加到数据中心的 “指定类目” 下
     headers = lease.body.data.param.headers
     lease_id = lease.body.data.file_upload_lease_id
     upload_url = lease.body.data.param.url
+    parser = "DASHSCOPE_DOCMIND"
 
-    # print(headers)
-    # print(lease_id)
-    # print(upload_url)
+    # 上传文件到 百炼 oss
+    upload_file_to_bailian(upload_url, headers, file_path)
 
-    upload_file_to_bailian(upload_url, headers, rag_file_path)
+    # 上传文件到具体类目下： 下一步执行完，刷新百炼数据中心页面，查看是否成功上传
+    add_file_response = add_file_to_bailian_category(client, lease_id, parser, category_id, workspace_id)
 
-    # lease_id = 'fc2efa921230467d90c832b5b4c95e46.1775904428797'
+    # 百炼中文件的 id：上传成功后，会自动创建
+    file_id = add_file_response.body.data.file_id
 
-    # 下一步执行完，刷新百炼数据中心页面，查看是否成功上传
-    add_file_response = add_file_to_bailian_category(bailian_client, lease_id, "DASHSCOPE_DOCMIND", rag_category_id, rag_workspace_id)
-    print(add_file_response)
-    rag_file_id = add_file_response.body.data.file_id
-    print(rag_file_id)
+    # 文件 props 信息：通过 file_id 查询到的文件属性信息
+    describe_file_response = describe_file(client, workspace_id, file_id)
+    print(describe_file_response)
+
+    return describe_file_response
+
+
+if __name__ == '__main__':
+    # mcp.run(transport="stdio")
+
+    # ------------------------------------------------------------------------------------------------
+
+    # 测试: 上传知识到 百炼 RAG 知识库
+    rag_file_path = "/Users/chenhui/Downloads/agent/ai-agent-test/app/code_agent/rag/rag_test.txt"
+    rag_category_id = "cate_9ec74c16bd614b4fa991a3d10b752267_12897951"  # 百炼类目名：智能体控制分类
+    rag_workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
+    bailian_client = create_client()
+
+    # 上传函数
+    describe_file_response = upload_rag_file_to_bailian(bailian_client, rag_workspace_id, rag_category_id,
+                                                        rag_file_path)
 
     # ------------------------------------------------------------------------------------------------
