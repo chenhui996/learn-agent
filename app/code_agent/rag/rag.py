@@ -78,14 +78,14 @@ def retrieve_index(client, workspace_id, index_id, query):
 @mcp.tool(name="query_rag", description="从百炼平台查询知识库信息")
 def query_rag_from_bailian(
         query: Annotated[str, Field(description="访问知识库查询的内容", examples=["终端的操作规范"])]) -> str:
-    bailian_client = create_client()  # 2. 实例化创建一个 百炼 SDK 客户端
-    print(bailian_client)
+    client = create_client()  # 2. 实例化创建一个 百炼 SDK 客户端
+    print(client)
     # 运行后若成功打印下面这种格式，证明创建成功
     # <alibabacloud_bailian20231229.client.Client object at 0x10cc4f4d0>
-    rag_workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
+    workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
     index_id = 'miuptjzt11'  # 阿里云百炼 -> 知识库 id
 
-    rag = retrieve_index(bailian_client, rag_workspace_id, index_id, query)
+    rag = retrieve_index(client, workspace_id, index_id, query)
 
     result = ""
 
@@ -197,6 +197,29 @@ def upload_rag_file_to_bailian(client, workspace_id, category_id, file_path):
     return describe_file_response
 
 
+# 创建知识库：创建索引
+def create_index(
+        client,
+        workspace_id,
+        name,
+        file_id,
+        structure_type="unstructured",
+        source_type="DATA_CENTER_FILE",
+        sink_type="BUILT_IN"):
+    headers = {}
+    runtime = util_models.RuntimeOptions()
+
+    request = bailian_20231229_models.CreateIndexRequest(
+        structure_type=structure_type,
+        source_type=source_type,
+        sink_type=sink_type,
+        name=name,
+        document_ids=[file_id],
+    )
+
+    return client.create_index_with_options(workspace_id, request, headers, runtime)
+
+
 if __name__ == '__main__':
     # mcp.run(transport="stdio")
 
@@ -208,8 +231,17 @@ if __name__ == '__main__':
     rag_workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
     bailian_client = create_client()
 
+    # ------------------------------------------------------------------------------------------------
+
     # 上传函数
-    describe_file_response = upload_rag_file_to_bailian(bailian_client, rag_workspace_id, rag_category_id,
-                                                        rag_file_path)
+    # file_response = upload_rag_file_to_bailian(bailian_client, rag_workspace_id, rag_category_id,
+    #                                            rag_file_path)
 
     # ------------------------------------------------------------------------------------------------
+
+    # 创建函数
+    response = create_index(bailian_client, rag_workspace_id, '智能体控制知识库',
+                            'file_b1a46892999d48ca9a6ee40592908d4e_12897951')
+    print(response)
+
+    index_id = 'm61sfltrwa'
