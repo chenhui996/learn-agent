@@ -197,7 +197,7 @@ def upload_rag_file_to_bailian(client, workspace_id, category_id, file_path):
     return describe_file_response
 
 
-# 创建知识库：创建索引
+# 创建知识库：1. 创建索引
 def create_index(
         client,
         workspace_id,
@@ -214,10 +214,33 @@ def create_index(
         source_type=source_type,
         sink_type=sink_type,
         name=name,
-        document_ids=[file_id],
+        document_ids=[file_id],  # 将文件给予 “向量化”
     )
 
     return client.create_index_with_options(workspace_id, request, headers, runtime)
+
+
+# 创建知识库：2. 指向索引
+def submit_index(client, workspace_id, index_id):
+    headers = {}
+    runtime = util_models.RuntimeOptions()
+
+    submit_index_job_request = bailian_20231229_models.SubmitIndexJobRequest(index_id=index_id)
+
+    return client.submit_index_job_with_options(workspace_id, submit_index_job_request, headers, runtime)
+
+
+#  创建知识库：3. 访问索引状态
+def get_index_job_status(client, workspace_id, index_id, job_id):
+    headers = {}
+    runtime = util_models.RuntimeOptions()
+
+    get_index_job_status_request = bailian_20231229_models.GetIndexJobStatusRequest(
+        index_id=index_id,
+        job_id=job_id,
+    )
+
+    return client.get_index_job_status_with_options(workspace_id, get_index_job_status_request, headers, runtime)
 
 
 if __name__ == '__main__':
@@ -233,15 +256,26 @@ if __name__ == '__main__':
 
     # ------------------------------------------------------------------------------------------------
 
-    # 上传函数
+    # 上传 函数
     # file_response = upload_rag_file_to_bailian(bailian_client, rag_workspace_id, rag_category_id,
     #                                            rag_file_path)
 
     # ------------------------------------------------------------------------------------------------
 
-    # 创建函数
-    response = create_index(bailian_client, rag_workspace_id, '智能体控制知识库',
-                            'file_b1a46892999d48ca9a6ee40592908d4e_12897951')
-    print(response)
+    # 创建知识库
 
-    index_id = 'm61sfltrwa'
+    # 1. 创建知识库，获取知识库索引
+    # response = create_index(bailian_client, rag_workspace_id, '智能体控制知识库test3',
+    #                         'file_b1a46892999d48ca9a6ee40592908d4e_12897951')
+    # print(response)
+    rag_index_id = "3prvi325h2"
+
+    # 2. 指向索引（文件将会 “指向一份” 到该索引下
+    # job_response = submit_index(bailian_client, rag_workspace_id, rag_index_id)
+    # job_id = job_response.body.data.id
+    # print(job_id)
+    rag_job_id = "dc9bb19f4911427787382ce69b7b29a0"
+
+    # 3. 获取该 “指向索引” 任务的指向情况
+    job_status = get_index_job_status(bailian_client, rag_workspace_id, rag_index_id, rag_job_id)
+    print(job_status.body.data)
