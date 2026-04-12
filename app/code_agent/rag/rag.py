@@ -243,6 +243,52 @@ def get_index_job_status(client, workspace_id, index_id, job_id):
     return client.get_index_job_status_with_options(workspace_id, get_index_job_status_request, headers, runtime)
 
 
+# 查询知识库：当前工作空间下的所有知识库信息
+def list_indices(client, workspace_id):
+    headers = {}
+    runtime = util_models.RuntimeOptions()
+
+    list_indices_request = bailian_20231229_models.ListIndicesRequest()
+
+    return client.list_indices_with_options(workspace_id, list_indices_request, headers, runtime)
+
+
+# 增量文件到添加知识库
+def submit_index_add_documents_job(
+        client,
+        workspace_id,
+        index_id,
+        file_id,
+        source_type="DATA_CENTER_FILE"
+):
+    headers = {}
+    runtime = util_models.RuntimeOptions()
+    submit_index_add_documents_job_request = bailian_20231229_models.SubmitIndexAddDocumentsJobRequest(
+        index_id=index_id,
+        source_type=source_type,
+        document_ids=[file_id],
+    )
+
+    return client.submit_index_add_documents_job_with_options(workspace_id, submit_index_add_documents_job_request,
+                                                              headers,
+                                                              runtime)
+
+# 封装多流程：增量文件到添加知识库
+def add_document_to_index(client, workspace_id, index_id, file_id):
+    submit_index_add_documents_job_response = submit_index_add_documents_job(
+        client,
+        workspace_id,
+        index_id,
+        file_id,
+    )
+
+    job_id = submit_index_add_documents_job_response.body.id
+
+    # 获取该 “指向索引” 任务的指向情况
+    job_status = get_index_job_status(client, workspace_id, index_id, job_id)
+    print(job_status.body.data)
+
+
 if __name__ == '__main__':
     # mcp.run(transport="stdio")
 
@@ -274,8 +320,36 @@ if __name__ == '__main__':
     # job_response = submit_index(bailian_client, rag_workspace_id, rag_index_id)
     # job_id = job_response.body.data.id
     # print(job_id)
-    rag_job_id = "dc9bb19f4911427787382ce69b7b29a0"
+    # rag_job_id = "dc9bb19f4911427787382ce69b7b29a0"
 
     # 3. 获取该 “指向索引” 任务的指向情况
-    job_status = get_index_job_status(bailian_client, rag_workspace_id, rag_index_id, rag_job_id)
-    print(job_status.body.data)
+    # job_status = get_index_job_status(bailian_client, rag_workspace_id, rag_index_id, rag_job_id)
+    # print(job_status.body.data)
+
+    # ------------------------------------------------------------------------------------------------
+
+    # 查询知识库：当前工作空间下的所有知识库信息
+    # list_indices_response = list_indices(bailian_client, rag_workspace_id)
+    #
+    # print(list_indices_response)
+
+    # ------------------------------------------------------------------------------------------------
+
+    # 添加增量文件到指定知识库下（向量化）
+
+    # rag_file_id = "file_94f8031c7de44be28cb27a487ea850ff_12897951"
+    # submit_index_add_documents_job_response = submit_index_add_documents_job(
+    #     bailian_client,
+    #     rag_workspace_id,
+    #     rag_index_id,
+    #     rag_file_id,
+    # )
+
+    # print(submit_index_add_documents_job_response)
+
+    # rag_job_id = "08e42839bf35491080e0159f5249a875"
+    # # 获取该 “指向索引” 任务的指向情况
+    # job_status = get_index_job_status(bailian_client, rag_workspace_id, rag_index_id, rag_job_id)
+    # print(job_status.body.data)
+
+    # ------------------------------------------------------------------------------------------------
