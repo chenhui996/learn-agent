@@ -11,6 +11,7 @@ from app.code_agent.model.qwen import llm_qwen
 from app.code_agent.rag.rag import query_rag_from_bailian
 from app.code_agent.tools.file_saver import FileSaver
 from app.code_agent.tools.file_tools import file_tools
+from app.code_agent.tools.rag_self_tools import get_stdio_rag_self_tools
 from app.code_agent.tools.rag_tools import get_stdio_rag_tools
 from app.code_agent.tools.terminal_tools import get_stdio_terminal_tools
 
@@ -35,10 +36,16 @@ async def run_agent():
     # shell_tools = await get_stdio_shell_tools()
     terminal_tools = await get_stdio_terminal_tools()
     rag_tools = await get_stdio_rag_tools()
+    rag_self_tools = await get_stdio_rag_self_tools()
+
+    # print(rag_self_tools)
+
     tools = (
-        # file_tools +
+            file_tools +
             terminal_tools +
-            rag_tools)
+            rag_tools +
+            rag_self_tools
+    )
 
     # 方案二：提供一个 rag 工具，让智能体通过工具查询知识
 
@@ -55,7 +62,7 @@ async def run_agent():
         prompt=SystemMessage(content=prompt.format(name="Bot")),
     )
 
-    config = RunnableConfig(configurable={"thread_id": 202604052}, recursion_limit=100)
+    config = RunnableConfig(configurable={"thread_id": 2026041215}, recursion_limit=1000)
 
     while True:
         user_input = input("用户: ")

@@ -75,30 +75,30 @@ def retrieve_index(client, workspace_id, index_id, query):
     )
 
 
-@mcp.tool(name="query_rag", description="从百炼平台查询知识库信息")
-def query_rag_from_bailian(
-        query: Annotated[str, Field(description="访问知识库查询的内容", examples=["终端的操作规范"])]) -> str:
-    client = create_client()  # 2. 实例化创建一个 百炼 SDK 客户端
-    print(client)
-    # 运行后若成功打印下面这种格式，证明创建成功
-    # <alibabacloud_bailian20231229.client.Client object at 0x10cc4f4d0>
-    workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
-    index_id = 'miuptjzt11'  # 阿里云百炼 -> 知识库 id
-
-    rag = retrieve_index(client, workspace_id, index_id, query)
-
-    result = ""
-
-    for data in rag.body.data.nodes:
-        result += f"""{data.text}
----
-"""
-    print("-" * 60)
-    print("[query_rag_from_bailian]", query)
-    print(result)
-    print("-" * 60)
-
-    return result
+# @mcp.tool(name="query_rag", description="从百炼平台查询知识库信息")
+# def query_rag_from_bailian(
+#         query: Annotated[str, Field(description="访问知识库查询的内容", examples=["终端的操作规范"])]) -> str:
+#     client = create_client()  # 2. 实例化创建一个 百炼 SDK 客户端
+#     print(client)
+#     # 运行后若成功打印下面这种格式，证明创建成功
+#     # <alibabacloud_bailian20231229.client.Client object at 0x10cc4f4d0>
+#     workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
+#     index_id = 'miuptjzt11'  # 阿里云百炼 -> 知识库 id
+#
+#     rag = retrieve_index(client, workspace_id, index_id, query)
+#
+#     result = ""
+#
+#     for data in rag.body.data.nodes:
+#         result += f"""{data.text}
+# ---
+# """
+#     print("-" * 60)
+#     print("[query_rag_from_bailian]", query)
+#     print(result)
+#     print("-" * 60)
+#
+#     return result
 
 
 # 申请租约
@@ -176,6 +176,8 @@ def upload_rag_file_to_bailian(client, workspace_id, category_id, file_path):
     # 获取百炼数据中心的 文件租约
     lease = apply_lease_by_file_path(client, category_id, workspace_id, file_path)
 
+    # print(lease)
+
     headers = lease.body.data.param.headers
     lease_id = lease.body.data.file_upload_lease_id
     upload_url = lease.body.data.param.url
@@ -194,7 +196,12 @@ def upload_rag_file_to_bailian(client, workspace_id, category_id, file_path):
     describe_file_response = describe_file(client, workspace_id, file_id)
     print(describe_file_response)
 
-    return describe_file_response
+    print('#' * 60)
+    print('获取 文件 id 成功')
+    print(file_id)
+    print('#' * 60)
+
+    return file_id
 
 
 # 创建知识库：1. 创建索引
@@ -273,6 +280,7 @@ def submit_index_add_documents_job(
                                                               headers,
                                                               runtime)
 
+
 # 封装多流程：增量文件到添加知识库
 def add_document_to_index(client, workspace_id, index_id, file_id):
     submit_index_add_documents_job_response = submit_index_add_documents_job(
@@ -282,23 +290,86 @@ def add_document_to_index(client, workspace_id, index_id, file_id):
         file_id,
     )
 
-    job_id = submit_index_add_documents_job_response.body.id
+    job_id = submit_index_add_documents_job_response.body.data.id
 
     # 获取该 “指向索引” 任务的指向情况
     job_status = get_index_job_status(client, workspace_id, index_id, job_id)
-    print(job_status.body.data)
+    # print(job_status.body.data)
+
+    return job_status.body.data
+
+
+@mcp.tool(name="query_rag", description="从百炼平台查询知识库信息")
+def query_rag_from_bailian(
+        query: Annotated[str, Field(description="访问知识库查询的内容", examples=[""])]) -> str:
+    client = create_client()  # 2. 实例化创建一个 百炼 SDK 客户端
+    print(client)
+    # 运行后若成功打印下面这种格式，证明创建成功
+    # <alibabacloud_bailian20231229.client.Client object at 0x10cc4f4d0>
+    workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
+    index_id = '3prvi325h2'  # 阿里云百炼 -> 知识库 id
+
+    rag = retrieve_index(client, workspace_id, index_id, query)
+
+    result = ""
+
+    for data in rag.body.data.nodes:
+        result += f"""{data.text}
+---
+"""
+    return result
+
+
+@mcp.tool(name="upload_rag_from_local_file_path", description="将本地的知识文件上传到百炼平台")
+def upload_rag_to_bailian(
+        file_path: Annotated[
+            str,
+            Field(
+                description="本地知识文件的路径，需要传入绝对路径",
+                examples=["/Users/chenhui/Downloads/agent/ai-agent-test/app/code_agent/rag/rag_test.txt"]
+            )
+        ]
+):
+    client = create_client()  # 实例化创建一个 百炼 SDK 客户端
+    workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
+    category_id = "cate_9ec74c16bd614b4fa991a3d10b752267_12897951"  # 百炼类目名：智能体控制分类
+    index_id = "3prvi325h2"  # 知识库 id：智能体控制知识库test3
+
+    file_id = upload_rag_file_to_bailian(client, workspace_id, category_id, file_path)
+
+    return add_document_to_index(client, workspace_id, index_id, file_id)
+
+
+@mcp.tool(name="query_bailian_rag_job_status", description="查询上传到百炼知识库中的知识文件的处理状态")
+def query_bailian_rag_job_status(
+        job_id: Annotated[
+            str,
+            Field(
+                description="处理此任务的 job_id",
+                examples=["fd59508eccc043e18d70061717f86631"]
+            )
+        ]
+):
+    client = create_client()
+    workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
+    index_id = "3prvi325h2"  # 知识库 id：智能体控制知识库test3
+
+    # 获取该 “指向索引” 任务的指向情况
+    job_status = get_index_job_status(client, workspace_id, index_id, job_id)
+
+    return job_status
 
 
 if __name__ == '__main__':
-    # mcp.run(transport="stdio")
+    mcp.run(transport="stdio")
 
     # ------------------------------------------------------------------------------------------------
 
     # 测试: 上传知识到 百炼 RAG 知识库
-    rag_file_path = "/Users/chenhui/Downloads/agent/ai-agent-test/app/code_agent/rag/rag_test.txt"
-    rag_category_id = "cate_9ec74c16bd614b4fa991a3d10b752267_12897951"  # 百炼类目名：智能体控制分类
-    rag_workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
-    bailian_client = create_client()
+    # rag_file_path = "/Users/chenhui/Downloads/agent/ai-agent-test/app/code_agent/rag/rag_test.txt"
+    # rag_category_id = "cate_9ec74c16bd614b4fa991a3d10b752267_12897951"  # 百炼类目名：智能体控制分类
+    # rag_workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
+    # bailian_client = create_client()
 
     # ------------------------------------------------------------------------------------------------
 
@@ -314,7 +385,7 @@ if __name__ == '__main__':
     # response = create_index(bailian_client, rag_workspace_id, '智能体控制知识库test3',
     #                         'file_b1a46892999d48ca9a6ee40592908d4e_12897951')
     # print(response)
-    rag_index_id = "3prvi325h2"
+    # rag_index_id = "3prvi325h2"
 
     # 2. 指向索引（文件将会 “指向一份” 到该索引下
     # job_response = submit_index(bailian_client, rag_workspace_id, rag_index_id)
