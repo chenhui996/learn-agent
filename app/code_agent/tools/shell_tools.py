@@ -5,7 +5,7 @@ async def get_stdio_shell_tools():
    params = {
        "command": "python",
        "args": [
-            "/Users/chenhui/Downloads/agent/ai-agent-test/app/code_agent/mcp/shell_tools.py"
+            "/Users/chenhui/Downloads/agent/lean-agent/app/code_agent/mcp/shell_tools.py"
        ]
    }
 

@@ -87,7 +87,7 @@ async def run_agent():
 
         # print(prompt)
 
-        # 在 /Users/chenhui/Downloads/agent/ai-agent-test/.temp/project/ 目录下，创建一个名为 vue2-test 的 vue2 项目
+        # 在 /Users/chenhui/Downloads/agent/lean-agent/.temp/project/ 目录下，创建一个名为 vue2-test 的 vue2 项目
         async for chunk in agent.astream(input={"messages": user_prompt}, config=config):
             iteration_count += 1
 

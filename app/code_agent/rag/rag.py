@@ -110,6 +110,7 @@ def apply_lease(client, category_id, file_name, file_md5, file_size, workspace_i
         md_5=file_md5,
         size_in_bytes=file_size,
     )
+
     return client.apply_file_upload_lease_with_options(
         category_id,
         workspace_id,
@@ -194,11 +195,9 @@ def upload_rag_file_to_bailian(client, workspace_id, category_id, file_path):
 
     # 文件 props 信息：通过 file_id 查询到的文件属性信息
     describe_file_response = describe_file(client, workspace_id, file_id)
-    print(describe_file_response)
-
+    print('[2.1] 文件 props 信息：通过 file_id 查询到的文件属性信息]', describe_file_response)
     print('#' * 60)
-    print('获取 文件 id 成功')
-    print(file_id)
+    print('[2.2] 获取 文件 id 成功', file_id)
     print('#' * 60)
 
     return file_id
@@ -326,7 +325,7 @@ def upload_rag_to_bailian(
             str,
             Field(
                 description="本地知识文件的路径，需要传入绝对路径",
-                examples=["/Users/chenhui/Downloads/agent/ai-agent-test/app/code_agent/rag/rag_test.txt"]
+                examples=["/Users/chenhui/Downloads/agent/lean-agent/app/code_agent/rag/rag_test.txt"]
             )
         ]
 ):
@@ -361,21 +360,26 @@ def query_bailian_rag_job_status(
 
 
 if __name__ == '__main__':
-    mcp.run(transport="stdio")
+    # mcp.run(transport="stdio")
 
     # ------------------------------------------------------------------------------------------------
 
     # 测试: 上传知识到 百炼 RAG 知识库
-    # rag_file_path = "/Users/chenhui/Downloads/agent/ai-agent-test/app/code_agent/rag/rag_test.txt"
-    # rag_category_id = "cate_9ec74c16bd614b4fa991a3d10b752267_12897951"  # 百炼类目名：智能体控制分类
-    # rag_workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
-    # bailian_client = create_client()
+    rag_file_path = "/Users/chenhui/Downloads/agent/learn-agent/app/code_agent/rag/rag_test.txt"
+    rag_category_id = "cate_9ec74c16bd614b4fa991a3d10b752267_12897951"  # 百炼类目名：智能体控制分类
+    rag_workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
+    bailian_client = create_client()
+
+    # 测试用例通过 -> 打印出 类似结构：<alibabacloud_bailian20231229.client.Client object at 0x10ca49010>
+    print('[1.-]', bailian_client)
 
     # ------------------------------------------------------------------------------------------------
 
     # 上传 函数
-    # file_response = upload_rag_file_to_bailian(bailian_client, rag_workspace_id, rag_category_id,
-    #                                            rag_file_path)
+    file_response = upload_rag_file_to_bailian(bailian_client, rag_workspace_id, rag_category_id,
+                                               rag_file_path)
+
+    print('[2.-]', file_response)
 
     # ------------------------------------------------------------------------------------------------
 
@@ -385,7 +389,8 @@ if __name__ == '__main__':
     # response = create_index(bailian_client, rag_workspace_id, '智能体控制知识库test3',
     #                         'file_b1a46892999d48ca9a6ee40592908d4e_12897951')
     # print(response)
-    # rag_index_id = "3prvi325h2"
+    # rag_index_id = "xo8atpexcx"
+
 
     # 2. 指向索引（文件将会 “指向一份” 到该索引下
     # job_response = submit_index(bailian_client, rag_workspace_id, rag_index_id)
