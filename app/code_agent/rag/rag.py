@@ -184,6 +184,9 @@ def upload_rag_file_to_bailian(client, workspace_id, category_id, file_path):
     upload_url = lease.body.data.param.url
     parser = "DASHSCOPE_DOCMIND"
 
+    # # 文件上传地址 阿里云百炼 给的
+    # print('param', lease.body.data.param.url)
+
     # 上传文件到 百炼 oss
     upload_file_to_bailian(upload_url, headers, file_path)
 
@@ -325,7 +328,7 @@ def upload_rag_to_bailian(
             str,
             Field(
                 description="本地知识文件的路径，需要传入绝对路径",
-                examples=["/Users/chenhui/Downloads/agent/lean-agent/app/code_agent/rag/rag_test.txt"]
+                examples=["/Users/chenhui/Downloads/agent/lean-agent/app/code_agent/rag/rag_test02.txt"]
             )
         ]
 ):
@@ -365,7 +368,7 @@ if __name__ == '__main__':
     # ------------------------------------------------------------------------------------------------
 
     # 测试: 上传知识到 百炼 RAG 知识库
-    rag_file_path = "/Users/chenhui/Downloads/agent/learn-agent/app/code_agent/rag/rag_test.txt"
+    rag_file_path = "/Users/chenhui/Downloads/agent/learn-agent/app/code_agent/rag/rag_test02.txt"
     rag_category_id = "cate_9ec74c16bd614b4fa991a3d10b752267_12897951"  # 百炼类目名：智能体控制分类
     rag_workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
     bailian_client = create_client()
