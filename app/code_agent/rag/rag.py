@@ -369,7 +369,7 @@ if __name__ == '__main__':
 
     # 测试: 上传知识到 百炼 RAG 知识库
     rag_file_path = "/Users/chenhui/Downloads/agent/learn-agent/app/code_agent/rag/rag_test02.txt"
-    rag_category_id = "cate_9ec74c16bd614b4fa991a3d10b752267_12897951"  # 百炼类目名：智能体控制分类
+    rag_category_id = "cate_16af1883cfb440c18bbb10f1f07bbb58_12897951"  # 官网 -> 应用 -> 数据连接 / 复习 RAG 之 2026-08-17 -> 百炼类目名：2026-08-17 demo1
     rag_workspace_id = 'llm-2bj8qis6czgv3sbc'  # 阿里云百炼 -> 业务空间id
     bailian_client = create_client()
 
