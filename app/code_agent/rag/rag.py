@@ -1,5 +1,7 @@
 import os
 import hashlib
+from sys import prefix
+
 import alibabacloud_bailian20231229.client
 
 from typing import Annotated
@@ -47,6 +49,8 @@ def get_file_info(file_path):
 
 # 创建一个百炼的客户端
 def create_client() -> bailian_20231229_client:
+    print('【1.0.1】', '【调用 百炼 API，用途：创建 百炼客户端的 配置项】，API 名称：【open_api_models】')
+
     # 具体实现
     # 1. 先有个配置
     config = open_api_models.Config(
@@ -54,6 +58,8 @@ def create_client() -> bailian_20231229_client:
         access_key_secret=os.environ['ALIBABA_CLOUD_ACCESS_KEY_SECRET'],  # 获取 阿里云的 access
     )
     config.endpoint = 'bailian.cn-beijing.aliyuncs.com'
+
+    print('【1.0.2】', '【调用 百炼 API，用途：创建 百炼客户端】，API 名称：【bailian_20231229_client】')
     return bailian_20231229_client(config)
 
 
@@ -111,6 +117,9 @@ def apply_lease(client, category_id, file_name, file_md5, file_size, workspace_i
         size_in_bytes=file_size,
     )
 
+    print('【2.0.4】',
+          '【调用 百炼 API，用途：获取 “用户租约” （lease）】，API 名称：【apply_file_upload_lease_with_options】')
+
     return client.apply_file_upload_lease_with_options(
         category_id,
         workspace_id,
@@ -121,6 +130,9 @@ def apply_lease(client, category_id, file_name, file_md5, file_size, workspace_i
 
 
 def apply_lease_by_file_path(client, category_id, workspace_id, file_path):
+    print('【2.0.3】',
+          '【执行 函数：获取 “待上传文件的信息”，file_name, file_size, file_md5 这些文件信息】，函数名称：【get_file_info】')
+
     file_name, file_size, file_md5 = get_file_info(file_path)
 
     return apply_lease(client, category_id, file_name, file_md5, file_size, workspace_id)
@@ -134,6 +146,9 @@ def upload_file_to_bailian(upload_url, headers, file_path):
         "Content-Type": headers["Content-Type"],
         "X-bailian-extra": headers["X-bailian-extra"],
     }
+
+    print('【2.0.6】',
+          '【调用 原生 API，用途：上传文件到 百炼 oss。因为租约中，告知了上传的 url 地址，所以只需要执行网络请求进行上传即可】，API 名称：【requests.put】')
 
     response = requests.put(upload_url, data=file_content, headers=upload_headers)
     # print(response.status_code)
@@ -150,12 +165,17 @@ def add_file_to_bailian_category(client, lease_id, parser, category_id, workspac
         category_id=category_id,
     )
 
+    print('【2.0.7】',
+          '【调用 百炼 API，用途：上传文件到具体 “类目” 下， 下一步执行完，刷新百炼对应页面，查看是否成功上传】，API 名称：【add_file_with_options】')
+
     return client.add_file_with_options(workspace_id, request, headers, runtime)
 
 
 def describe_file(client, workspace_id, file_id):
     headers = {}
     runtime = util_models.RuntimeOptions()
+
+    print('【2.0.9】', '【调用 百炼 API：查询已上传文件的 “详细信息”】，API名称：【describe_file_with_options】')
 
     return client.describe_file_with_options(workspace_id, file_id, headers, runtime)
 
@@ -174,8 +194,14 @@ def upload_rag_file_to_bailian(client, workspace_id, category_id, file_path):
         file props: 文件上传状态
     """
 
+    print('【2.0.2】',
+          '【执行 函数：获取百炼数据中心的 “文件租约”】，函数名称：【apply_lease_by_file_path】')
+
     # 获取百炼数据中心的 文件租约
     lease = apply_lease_by_file_path(client, category_id, workspace_id, file_path)
+
+    print('【2.0.5】',
+          '【租约 打印：lease”】', lease)
 
     # print(lease)
 
@@ -196,14 +222,11 @@ def upload_rag_file_to_bailian(client, workspace_id, category_id, file_path):
     # 百炼中文件的 id：上传成功后，会自动创建
     file_id = add_file_response.body.data.file_id
 
-    # 文件 props 信息：通过 file_id 查询到的文件属性信息
-    describe_file_response = describe_file(client, workspace_id, file_id)
-    print('[2.1] 文件 props 信息：通过 file_id 查询到的文件属性信息]', describe_file_response)
-    print('#' * 60)
-    print('[2.2] 获取 文件 id 成功', file_id)
-    print('#' * 60)
+    print('【2.0.8】', '【打印 对象，描述：百炼中 “已上传文件的 id”，上传成功后，会自动创建】，打印 对象：file_id', file_id)
 
-    return file_id
+    describe_file_response = describe_file(client, workspace_id, file_id)
+
+    return describe_file_response
 
 
 # 创建知识库：1. 创建索引
@@ -212,9 +235,10 @@ def create_index(
         workspace_id,
         name,
         file_id,
-        structure_type="unstructured",
-        source_type="DATA_CENTER_FILE",
-        sink_type="BUILT_IN"):
+        structure_type="unstructured",  # 是否为结构化数据
+        source_type="DATA_CENTER_FILE",  # 文件来源：默认就是数据中心
+        sink_type="BUILT_IN"  # 知识库向量存储的类型
+):
     headers = {}
     runtime = util_models.RuntimeOptions()
 
@@ -223,8 +247,11 @@ def create_index(
         source_type=source_type,
         sink_type=sink_type,
         name=name,
+        description="学习用创建的知识库，创建时间：2026-08-23",
         document_ids=[file_id],  # 将文件给予 “向量化”
     )
+
+    print('【3.0.2】','【调用 百炼 API，用途：创建具体的 知识库】','API名称：create_index_with_options')
 
     return client.create_index_with_options(workspace_id, request, headers, runtime)
 
@@ -365,7 +392,11 @@ def query_bailian_rag_job_status(
 if __name__ == '__main__':
     # mcp.run(transport="stdio")
 
+    print('-' * 6, '任务分割线', '-' * 120)
+
     # ------------------------------------------------------------------------------------------------
+
+    print('【1.0.0】', '【任务 描述：创建 百炼客户端】','【必选任务】')
 
     # 测试: 上传知识到 百炼 RAG 知识库
     rag_file_path = "/Users/chenhui/Downloads/agent/learn-agent/app/code_agent/rag/rag_test02.txt"
@@ -374,31 +405,51 @@ if __name__ == '__main__':
     bailian_client = create_client()
 
     # 测试用例通过 -> 打印出 类似结构：<alibabacloud_bailian20231229.client.Client object at 0x10ca49010>
-    print('[1.-]', bailian_client)
+    print('【1.1.0】', '【创建 百炼客户端 成功】，打印创建的 bailian_client：', bailian_client)
+    print('-' * 6, '任务分割线', '-' * 120)
 
     # ------------------------------------------------------------------------------------------------
 
-    # 上传 函数
-    file_response = upload_rag_file_to_bailian(bailian_client, rag_workspace_id, rag_category_id,
-                                               rag_file_path)
-
-    print('[2.-]', file_response)
+    print('【2.0.0】',
+          '【任务 描述：将本地的某个 测试文件，上传到 百炼 某个“数据连接” 下的某个 “类目”下】','【可选任务】')
+    #
+    # print('【2.0.1】',
+    #       '【执行 函数：本任务的入口函数，也就是 “上传” 函数本身】，函数名称：【upload_rag_file_to_bailian】')
+    #
+    # # 上传 函数
+    # file_response = upload_rag_file_to_bailian(bailian_client, rag_workspace_id, rag_category_id,
+    #                                            rag_file_path)
+    #
+    # print('【2.1.0】',
+    #       '【测试文件，已经被上传到 百炼的某个 “数据连接” 下的某个 “类目”】,打印 “文件详细信息”：',
+    #       file_response)
+    print('-' * 6, '任务分割线', '-' * 120)
 
     # ------------------------------------------------------------------------------------------------
+
+    print('【3.0.0】','【任务 描述：增删改查 知识库】')
+
+    print('【3.0.1】','【任务 描述：创建 知识库】','【可选任务】')
 
     # 创建知识库
 
     # 1. 创建知识库，获取知识库索引
-    # response = create_index(bailian_client, rag_workspace_id, '智能体控制知识库test3',
-    #                         'file_b1a46892999d48ca9a6ee40592908d4e_12897951')
-    # print(response)
-    # rag_index_id = "xo8atpexcx"
+    # response = create_index(bailian_client, rag_workspace_id, '智能体控制知识库test3-2026-08-23',
+    #                         'file_db7c92bbc85a4c5389b2dd519cd9e06c_12897951')
+    # print('【3.1.0】，【打印 描述：创建 知识库 完成，即将打印 “百炼创建成功后的 return 内容”：】',response)
 
+    print('-' * 6, '任务分割线', '-' * 120)
+
+    # ------------------------------------------------------------------------------------------------
+
+    rag_index_id = "oac84j4cvy" # 上面 【3.1.0】创建的知识库的 专属ID
+
+    print('【3.1.1】','【任务 描述：创建 知识库 后，指向索引（文件将会 “指向一份” 到该索引下】','直接使用【3.1.0】创建好的 知识库 id：', rag_index_id,'【可选任务】')
 
     # 2. 指向索引（文件将会 “指向一份” 到该索引下
-    # job_response = submit_index(bailian_client, rag_workspace_id, rag_index_id)
-    # job_id = job_response.body.data.id
-    # print(job_id)
+    job_response = submit_index(bailian_client, rag_workspace_id, rag_index_id)
+    job_id = job_response.body.data.id
+    print(job_id)
     # rag_job_id = "dc9bb19f4911427787382ce69b7b29a0"
 
     # 3. 获取该 “指向索引” 任务的指向情况
